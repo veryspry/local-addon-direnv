@@ -22,16 +22,21 @@ export default function addDirenv(site: Local.Site) : void {
 	const phpService = lightningServices.getSiteServiceByRole(site, Local.SiteServiceRole.PHP);
 	const dbService = lightningServices.getSiteServiceByRole(site, Local.SiteServiceRole.DATABASE);
 
-	const direnvContent = `export MYSQL_HOME="${toPOSIX(dbService!.configPath)}"
-export PHPRC="${toPOSIX(phpService!.configPath)}"
-export WP_CLI_CONFIG_PATH="${toPOSIX(path.join(wpCliDir, 'config.yaml'))}"
-export WP_CLI_DISABLE_AUTO_CHECK_UPDATE=1
-export PATH="${toPOSIX(dbService!.$PATH)}:$PATH"
-export PATH="${toPOSIX(phpService!.$PATH)}:$PATH"
-export PATH="${toPOSIX(wpCliPATH)}:$PATH"
-export PATH="${toPOSIX(composerPATH)}:$PATH"
+	const direnvContentLines = [
+		`export MYSQL_HOME="${toPOSIX(dbService!.configPath)}"`,
+		`export PHPRC="${toPOSIX(phpService!.configPath)}"`,
+		`export WP_CLI_CONFIG_PATH="${toPOSIX(path.join(wpCliDir, 'config.yaml'))}"`,
+		'export WP_CLI_DISABLE_AUTO_CHECK_UPDATE=1',
+		`export PATH="${toPOSIX(dbService!.$PATH)}:$PATH"`,
+		`export PATH="${toPOSIX(phpService!.$PATH)}:$PATH"`,
+		`export PATH="${toPOSIX(wpCliPATH)}:$PATH"`,
+		`export PATH="${toPOSIX(composerPATH)}:$PATH"`,
+		`${phpService!.siteShellStartupPOSIX}`,
+		'# default to system shared lib dir',
+		'export LD_LIBRARY_PATH="/lib/x86_64-linux-gnu":"$LD_LIBRARY_PATH"'
+	]
 
-${phpService!.siteShellStartupPOSIX}`;
+	const direnvContent = direnvContentLines.join(os.EOL);
 
 	fs.writeFileSync(path.join(site.paths.app, '.envrc'), direnvContent);
 }
